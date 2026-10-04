@@ -9,13 +9,11 @@ type Result = { error?: string };
 
 export async function recordPaymentAction(formData: FormData): Promise<Result> {
   try {
-    const files = formData
-      .getAll("files")
-      .filter((f): f is File => f instanceof File && f.size > 0);
-
-    const evidence: Evidence[] = await Promise.all(
-      files.map(async (f) => ({ name: f.name, type: f.type, bytes: await f.arrayBuffer() })),
-    );
+      const file = formData.get("file");
+      const evidence: Evidence | null =
+        file instanceof File && file.size > 0
+          ? { name: file.name, type: file.type, bytes: await file.arrayBuffer() }
+          : null;
 
     await recordPayment(
       iuranRepository,

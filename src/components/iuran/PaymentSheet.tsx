@@ -4,7 +4,6 @@ import { recordPaymentAction } from "@/app/iuran/actions";
 import {
   IuranData,
   MAX_EVIDENCE_BYTES,
-  MAX_EVIDENCE_FILES,
   isValidAmount,
   previewAllocation,
 } from "@/domain/iuran";
@@ -31,6 +30,7 @@ export function PaymentSheet({ data, memberId, onClose, onDone }: Props) {
   const [files, setFiles] = useState<File[]>([]);
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
+  const [file, setFile] = useState<File | null>(null);
 
   const fee = data.weeklyFee;
   const amount = Number(digits);
@@ -39,19 +39,18 @@ export function PaymentSheet({ data, memberId, onClose, onDone }: Props) {
   const valid = isValidAmount(amount, fee);
   const slots = member && valid ? previewAllocation(member, amount, data) : [];
 
-  async function addFiles(e: ChangeEvent<HTMLInputElement>) {
-    const picked = Array.from(e.target.files ?? []);
-    e.target.value = "";
-    const ready = await Promise.all(picked.map((f) => compressImage(f)));
-    setFiles((current) => [...current, ...ready].slice(0, MAX_EVIDENCE_FILES));
+  async function pickFile(e: ChangeEvent<HTMLInputElement>) {
+    const picked = e.target.files?.[0];
+    e.target.value = ""; // agar file yang sama bisa dipilih lagi
+    if (picked) setFile(await compressImage(picked));
   }
 
   async function submit(e: FormEvent) {
     e.preventDefault();
     setError("");
 
-    if (files.reduce((sum, f) => sum + f.size, 0) > MAX_EVIDENCE_BYTES) {
-      setError("Total ukuran bukti maksimal 4 MB.");
+    if (file && file.size > MAX_EVIDENCE_BYTES) {
+      setError("Ukuran bukti maksimal 4 MB.");
       return;
     }
 
@@ -62,7 +61,7 @@ export function PaymentSheet({ data, memberId, onClose, onDone }: Props) {
       form.set("paymentDate", date);
       form.set("amount", String(amount));
       form.set("methodId", methodId);
-      files.forEach((f) => form.append("files", f));
+      if (file) form.set("file", file);
 
       const result = await recordPaymentAction(form);
       if (result.error) throw new Error(result.error);
@@ -154,25 +153,20 @@ export function PaymentSheet({ data, memberId, onClose, onDone }: Props) {
 
       <div className="field">
         Bukti pembayaran (opsional)
-        {files.map((f, i) => (
-          <div key={`${f.name}-${i}`} className="file-row">
+        {file ? (
+          <div className="file-row">
             <Paperclip />
-            <span>{f.name}</span>
-            <small className="muted">{fileSize(f.size)}</small>
-            <button
-              type="button"
-              aria-label="Hapus file"
-              onClick={() => setFiles(files.filter((_, j) => j !== i))}
-            >
+            <span>{file.name}</span>
+            <small className="muted">{fileSize(file.size)}</small>
+            <button type="button" aria-label="Hapus file" onClick={() => setFile(null)}>
               <X />
             </button>
           </div>
-        ))}
-        {files.length < MAX_EVIDENCE_FILES && (
+        ) : (
           <label className="file-add">
             <Paperclip />
             Tambah foto atau PDF
-            <input type="file" accept="image/*,application/pdf" multiple hidden onChange={addFiles} />
+            <input type="file" accept="image/*,application/pdf" hidden onChange={pickFile} />
           </label>
         )}
       </div>

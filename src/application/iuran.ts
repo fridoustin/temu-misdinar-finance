@@ -3,7 +3,6 @@ import {
   Evidence,
   IuranData,
   MAX_EVIDENCE_BYTES,
-  MAX_EVIDENCE_FILES,
   Member,
   NewPayment,
   Period,
@@ -18,7 +17,7 @@ import {
 export interface IuranRepository {
   getIuran(): Promise<IuranData>;
   getAttachments(memberId: string): Promise<AttachmentLink[]>;
-  recordPayment(p: NewPayment, evidence: Evidence[]): Promise<void>;
+  recordPayment(p: NewPayment, evidence: Evidence | null): Promise<void>;
 }
 
 export interface MemberRow {
@@ -53,7 +52,7 @@ export const totalCollected = (d: IuranData): number =>
 export async function recordPayment(
   repo: IuranRepository,
   p: NewPayment,
-  evidence: Evidence[],
+  evidence: Evidence | null,
 ): Promise<void> {
   if (!isValidAmount(p.amount, WEEKLY_FEE)) {
     throw new Error(`Nominal pembayaran harus kelipatan Rp${WEEKLY_FEE.toLocaleString("id-ID")}`);
@@ -61,14 +60,11 @@ export async function recordPayment(
   if (!p.methodId) {
     throw new Error("Metode pembayaran wajib dipilih.");
   }
-  if (evidence.length > MAX_EVIDENCE_FILES) {
-    throw new Error(`Maksimal ${MAX_EVIDENCE_FILES} file bukti.`);
-  }
-  if (!evidence.every((f) => isEvidenceType(f.type))) {
+  if (evidence && !isEvidenceType(evidence.type)) {
     throw new Error("Bukti harus berupa foto atau PDF.");
   }
-  if (evidence.reduce((sum, f) => sum + f.bytes.byteLength, 0) > MAX_EVIDENCE_BYTES) {
-    throw new Error("Total ukuran bukti maksimal 4 MB.");
+  if (evidence && evidence.bytes.byteLength > MAX_EVIDENCE_BYTES) {
+    throw new Error("Ukuran bukti maksimal 4 MB.");
   }
   await repo.recordPayment(p, evidence);
 }

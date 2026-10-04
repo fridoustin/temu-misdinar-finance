@@ -1,12 +1,19 @@
-import { randomUUID } from "node:crypto";
 import type { IuranRepository } from "@/application/iuran";
-import { WEEKLY_FEE, type AttachmentLink } from "@/domain/iuran";
+import { WEEKLY_FEE, type AttachmentLink, type Evidence } from "@/domain/iuran";
 import { db } from "./supabase";
 
 const BUCKET = "bukti";
 const SIGNED_URL_SECONDS = 60 * 60;
 
-const safeName = (name: string) => name.replace(/[^\w.-]+/g, "_");
+const EXTENSIONS: Record<string, string> = {
+  "image/jpeg": "jpg",
+  "image/png": "png",
+  "image/webp": "webp",
+  "application/pdf": "pdf",
+};
+
+const extensionOf = (file: Evidence): string =>
+  EXTENSIONS[file.type] ?? (file.name.split(".").pop() ?? "bin").toLowerCase().replace(/\W/g, "");
 
 export const iuranRepository: IuranRepository = {
   async getIuran() {
@@ -86,40 +93,47 @@ export const iuranRepository: IuranRepository = {
   },
 
   async recordPayment(p, evidence) {
-    const id = randomUUID();
-    const storage = db.storage.from(BUCKET);
-    const uploaded: { payment_id: string; file_path: string; file_name: string }[] = [];
-
-    try {
-      // File diunggah lebih dulu agar pembayaran tidak tersimpan tanpa bukti jika unggahan gagal.
-      for (const [i, file] of evidence.entries()) {
-        const path = `payments/${id}/${i + 1}-${safeName(file.name)}`;
-        const { error } = await storage.upload(path, file.bytes, { contentType: file.type });
-        if (error) throw new Error(`Gagal mengunggah bukti: ${error.message}`);
-        uploaded.push({ payment_id: id, file_path: path, file_name: file.name });
-      }
-
-      const inserted = await db.from("payments").insert({
-        id,
+    const inserted = await db
+      .from("payments")
+      .insert({
         member_id: p.memberId,
         payment_date: p.paymentDate,
         amount: p.amount,
         payment_method_id: p.methodId,
-      });
-      if (inserted.error?.code === "23503") {
-        throw new Error("Anggota atau metode pembayaran tidak ditemukan.");
-      }
-      if (inserted.error) throw new Error(inserted.error.message);
+      })
+      .select("id,payment_number")
+      .single();
 
-      if (uploaded.length > 0) {
-        const attached = await db.from("payment_attachments").insert(uploaded);
-        if (attached.error) {
-          await db.from("payments").delete().eq("id", id);
-          throw new Error(attached.error.message);
-        }
-      }
+    if (inserted.error?.code === "23503") {
+      throw new Error("Anggota atau metode pembayaran tidak ditemukan.");
+    }
+    if (inserted.error) throw new Error(inserted.error.message);
+
+    const { id, payment_number: number } = inserted.data;
+
+    // Tanpa nomor, nama file tidak bisa dibentuk. Batalkan agar tidak ada pembayaran tanpa nomor.
+    if (!number) {
+      await db.from("payments").delete().eq("id", id);
+      throw new Error("Nomor pembayaran belum terbentuk. Periksa trigger penomoran di database.");
+    }
+
+    if (!evidence) return;
+
+    // Satu pembayaran, satu bukti. Nama file mengikuti nomor: payments/M005/PPA-I008.jpg
+    const path = `payments/${p.memberId}/${number}.${extensionOf(evidence)}`;
+    const storage = db.storage.from(BUCKET);
+
+    try {
+      const { error } = await storage.upload(path, evidence.bytes, { contentType: evidence.type });
+      if (error) throw new Error(`Gagal mengunggah bukti: ${error.message}`);
+
+      const attached = await db
+        .from("payment_attachments")
+        .insert({ payment_id: id, file_path: path, file_name: evidence.name });
+      if (attached.error) throw new Error(attached.error.message);
     } catch (e) {
-      if (uploaded.length > 0) await storage.remove(uploaded.map((u) => u.file_path));
+      await storage.remove([path]);
+      await db.from("payments").delete().eq("id", id);
       throw e;
     }
   },

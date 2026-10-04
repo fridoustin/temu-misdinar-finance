@@ -109,7 +109,6 @@ export const previewAllocation = (
   return d.periods.slice(start, start + weeksPaid(amount, d.weeklyFee));
 };
 
-export const MAX_EVIDENCE_FILES = 5;
 export const MAX_EVIDENCE_BYTES = 4 * 1024 * 1024;
 
 export const isEvidenceType = (type: string): boolean =>
