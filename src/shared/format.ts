@@ -28,3 +28,16 @@ export const todayIso = () => {
 
 export const fileSize = (bytes: number) =>
   bytes >= 1024 * 1024 ? `${(bytes / (1024 * 1024)).toFixed(1)} MB` : `${Math.round(bytes / 1024)} KB`;
+
+/** Ringkas untuk ruang sempit: 2.700.000 menjadi "2,7 jt". */
+export const rupiahCompact = (n: number): string => {
+  const abs = Math.abs(n);
+  const sign = n < 0 ? "-" : "";
+  const fmt = (value: number, unit: string) =>
+    `${sign}${value.toLocaleString("id-ID", { maximumFractionDigits: 1 })} ${unit}`;
+
+  if (abs >= 1e9) return fmt(abs / 1e9, "M");
+  if (abs >= 1e6) return fmt(abs / 1e6, "jt");
+  if (abs >= 1e3) return fmt(abs / 1e3, "rb");
+  return `${sign}${abs}`;
+};

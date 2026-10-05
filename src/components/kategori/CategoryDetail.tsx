@@ -47,7 +47,7 @@ export function CategoryDetail({ category, transactions }: Props) {
                   transaction={t}
                   title={t.note || category.name}
                   meta={`${t.number} - ${dayShort(t.date)}`}
-                  onSelect={() => router.push(`/finance/${t.id}`)}
+                  onSelect={() => router.push(`/finance/${t.number}`)}
                 />
               ))}
             </ul>

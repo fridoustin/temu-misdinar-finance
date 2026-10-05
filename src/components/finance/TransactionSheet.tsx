@@ -1,15 +1,17 @@
 import { useState, type FormEvent } from "react";
-import { categoriesFor, type FormOptions, type TransactionType } from "@/domain/finance";
+import { categoriesFor, type FormOptions, type TransactionType, type Transaction } from "@/domain/finance";
 import { MAX_EVIDENCE_BYTES } from "@/domain/iuran";
 import { todayIso } from "@/shared/format";
 import { DatePicker } from "@/components/ui/DatePicker";
 import { EvidencePicker } from "@/components/ui/EvidencePicker";
 import { Select } from "@/components/ui/Select";
 import { Sheet } from "@/components/ui/Sheet";
-import { addTransactionAction } from "@/app/finance/action";
+import { addTransactionAction, updateTransactionAction } from "@/app/finance/action";
 
 interface Props {
   options: FormOptions;
+  transaction?: Transaction; // diisi saat edit
+  currentProof?: string | null; // nama bukti yang sudah tersimpan
   onClose(): void;
   onDone(): void;
 }
@@ -19,28 +21,35 @@ const TYPES: readonly (readonly [TransactionType, string])[] = [
   ["expense", "Pengeluaran"],
 ];
 
-export function TransactionSheet({ options, onClose, onDone }: Props) {
-  const methods = options.paymentMethods.filter((m) => m.isActive);
-
-  const [type, setType] = useState<TransactionType>("income");
-  const [digits, setDigits] = useState("");
-  const [categoryId, setCategoryId] = useState(
-    categoriesFor("income", options.categories)[0]?.id ?? "",
+export function TransactionSheet({ options, transaction, currentProof, onClose, onDone }: Props) {
+  const editing = Boolean(transaction);
+  const methods = options.paymentMethods.filter(
+    (m) => m.isActive || m.id === transaction?.methodId,
   );
-  const [methodId, setMethodId] = useState(methods[0]?.id ?? "");
-  const [divisionId, setDivisionId] = useState("");
-  const [date, setDate] = useState(todayIso());
-  const [note, setNote] = useState("");
+
+  const [pickedType, setType] = useState<TransactionType>("income");
+  const [digits, setDigits] = useState(transaction ? String(transaction.amount) : "");
+  const [categoryId, setCategoryId] = useState(
+    transaction?.categoryId ?? categoriesFor("income", options.categories)[0]?.id ?? "",
+  );
+  const [methodId, setMethodId] = useState(transaction?.methodId ?? methods[0]?.id ?? "");
+  const [divisionId, setDivisionId] = useState(transaction?.divisionId ?? "");
+  const [date, setDate] = useState(transaction?.date ?? todayIso());
+  const [note, setNote] = useState(transaction?.note ?? "");
   const [file, setFile] = useState<File | null>(null);
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
 
+  // Jenis transaksi tidak bisa diubah saat edit, karena nomornya (M atau K) mengikuti jenis.
+  const type = transaction?.type ?? pickedType;
   const isExpense = type === "expense";
   const amount = Number(digits);
-  const categoryOptions = categoriesFor(type, options.categories).map((c) => ({
-    value: c.id,
-    label: c.name,
-  }));
+
+  const listed = categoriesFor(type, options.categories);
+  const existing = options.categories.find((c) => c.id === transaction?.categoryId);
+  const categoryChoices = existing && !listed.includes(existing) ? [...listed, existing] : listed;
+  const categoryOptions = categoryChoices.map((c) => ({ value: c.id, label: c.name }));
+
   const ready = Boolean(amount && categoryId && methodId && (!isExpense || divisionId));
 
   function changeType(next: TransactionType) {
@@ -69,7 +78,9 @@ export function TransactionSheet({ options, onClose, onDone }: Props) {
       form.set("note", note);
       if (file) form.set("file", file);
 
-      const result = await addTransactionAction(form);
+      const result = transaction
+        ? await updateTransactionAction(transaction.id, form)
+        : await addTransactionAction(form);
       if (result.error) throw new Error(result.error);
       onDone();
     } catch (x) {
@@ -79,20 +90,22 @@ export function TransactionSheet({ options, onClose, onDone }: Props) {
   }
 
   return (
-    <Sheet title="Tambah transaksi" onClose={onClose} onSubmit={submit}>
-      <div className="seg" role="radiogroup" aria-label="Jenis transaksi">
-        {TYPES.map(([value, label]) => (
-          <label key={value}>
-            <input
-              type="radio"
-              name="type"
-              checked={type === value}
-              onChange={() => changeType(value)}
-            />
-            <span>{label}</span>
-          </label>
-        ))}
-      </div>
+    <Sheet title={editing ? "Edit transaksi" : "Tambah transaksi"} onClose={onClose} onSubmit={submit}>
+      {!editing && (
+        <div className="seg" role="radiogroup" aria-label="Jenis transaksi">
+          {TYPES.map(([value, label]) => (
+            <label key={value}>
+              <input
+                type="radio"
+                name="type"
+                checked={type === value}
+                onChange={() => changeType(value)}
+              />
+              <span>{label}</span>
+            </label>
+          ))}
+        </div>
+      )}
 
       <label className="field">
         Nominal
@@ -167,12 +180,15 @@ export function TransactionSheet({ options, onClose, onDone }: Props) {
 
       <div className="field">
         Bukti (opsional)
+        {currentProof && !file && (
+          <small className="muted">Bukti saat ini: {currentProof}. Pilih file baru untuk menggantinya.</small>
+        )}
         <EvidencePicker file={file} onChange={setFile} />
       </div>
 
       {error && <p className="err">{error}</p>}
       <button className="btn" disabled={busy || !ready}>
-        {busy ? "Menyimpan..." : "Simpan transaksi"}
+        {busy ? "Menyimpan..." : editing ? "Simpan perubahan" : "Simpan transaksi"}
       </button>
     </Sheet>
   );

@@ -23,11 +23,13 @@ function handlePop() {
 }
 
 /** Tombol back (HP atau browser) menutup panel teratas dulu, bukan pindah halaman. */
-export function useBackClose(onClose: () => void) {
+export function useBackClose(onClose: () => void, enabled = true) {
   const closeRef = useRef(onClose);
   closeRef.current = onClose;
 
   useEffect(() => {
+    if (!enabled) return;
+
     if (!listening) {
       window.addEventListener("popstate", handlePop);
       listening = true;
@@ -55,5 +57,5 @@ export function useBackClose(onClose: () => void) {
         history.back();
       }
     };
-  }, []);
+  }, [enabled]);
 }

@@ -33,7 +33,7 @@ export function TransactionList({ transactions, categories, onSelect }: Props) {
                   transaction={t}
                   title={t.note || category}
                   meta={`${t.number} - ${category}`}
-                  onSelect={() => onSelect(t.id)}
+                  onSelect={() => onSelect(t.number)}
                 />
               );
             })}

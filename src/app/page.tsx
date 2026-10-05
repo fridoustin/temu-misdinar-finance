@@ -1,5 +1,4 @@
 import { homeSummary } from "@/application/home";
-import { totalCollected } from "@/application/iuran";
 import { HomeView } from "@/components/Home/HomeView";
 import { financeRepository } from "@/infrastructure/financeRepository";
 import { iuranRepository } from "@/infrastructure/iuranRepository";
@@ -11,5 +10,5 @@ export default async function HomePage() {
     financeRepository.getFinance(),
     iuranRepository.getIuran(),
   ]);
-  return <HomeView summary={homeSummary(finance, totalCollected(iuran))} />;
+  return <HomeView summary={homeSummary(finance, iuran)} finance={finance} />;
 }

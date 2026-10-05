@@ -67,7 +67,7 @@ export function FinanceView({ data }: { data: FinanceData }) {
       <TransactionList
         transactions={visible}
         categories={data.categories}
-        onSelect={(id) => router.push(`/finance/${id}`)}
+        onSelect={(number) => router.push(`/finance/${number}`)}
       />
     </>
   );

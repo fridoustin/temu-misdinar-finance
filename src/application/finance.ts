@@ -15,6 +15,8 @@ export interface FinanceRepository {
   getFormOptions(): Promise<FormOptions>;
   getAttachment(transactionId: string): Promise<TransactionAttachment | null>;
   addTransaction(t: NewTransaction, evidence: Evidence | null): Promise<void>;
+  updateTransaction(id: string, t: NewTransaction, evidence: Evidence | null): Promise<void>;
+  deleteTransaction(id: string): Promise<void>;
   addCategory(name: string): Promise<void>;
 }
 
@@ -30,11 +32,7 @@ export function summarizeByCategory(data: FinanceData): CategorySummary[] {
   });
 }
 
-export async function addTransaction(
-  repo: FinanceRepository,
-  t: NewTransaction,
-  evidence: Evidence | null,
-): Promise<void> {
+function validate(t: NewTransaction, evidence: Evidence | null): void {
   const isExpense = t.type === "expense";
 
   if (t.type !== "income" && t.type !== "expense") {
@@ -61,11 +59,38 @@ export async function addTransaction(
   if (evidence && evidence.bytes.byteLength > MAX_EVIDENCE_BYTES) {
     throw new Error("Ukuran bukti maksimal 4 MB.");
   }
+}
 
-  await repo.addTransaction(
-    { ...t, note: t.note.trim(), divisionId: isExpense ? t.divisionId : null },
-    evidence,
-  );
+const normalize = (t: NewTransaction): NewTransaction => ({
+  ...t,
+  note: t.note.trim(),
+  divisionId: t.type === "expense" ? t.divisionId : null,
+});
+
+export async function addTransaction(
+  repo: FinanceRepository,
+  t: NewTransaction,
+  evidence: Evidence | null,
+): Promise<void> {
+  validate(t, evidence);
+  await repo.addTransaction(normalize(t), evidence);
+}
+
+/** Jenis transaksi tidak bisa diubah, karena nomornya (M atau K) ditentukan oleh jenisnya. */
+export async function updateTransaction(
+  repo: FinanceRepository,
+  id: string,
+  t: NewTransaction,
+  evidence: Evidence | null,
+): Promise<void> {
+  if (!id) throw new Error("Transaksi tidak ditemukan.");
+  validate(t, evidence);
+  await repo.updateTransaction(id, normalize(t), evidence);
+}
+
+export async function deleteTransaction(repo: FinanceRepository, id: string): Promise<void> {
+  if (!id) throw new Error("Transaksi tidak ditemukan.");
+  await repo.deleteTransaction(id);
 }
 
 export async function addCategory(repo: FinanceRepository, name: string): Promise<void> {
