@@ -1,10 +1,20 @@
-import { Category, FinanceData, NewTransaction, Totals, totalsOf } from "@/domain/finance";
+import {
+  Category,
+  FinanceData,
+  FormOptions,
+  NewTransaction,
+  Totals,
+  TransactionAttachment,
+  totalsOf,
+} from "@/domain/finance";
+import { Evidence, MAX_EVIDENCE_BYTES, isEvidenceType } from "@/domain/iuran";
 
 /** Port: diimplementasikan oleh layer infrastructure. */
 export interface FinanceRepository {
   getFinance(): Promise<FinanceData>;
-  getCategories(): Promise<Category[]>;
-  addTransaction(t: NewTransaction): Promise<void>;
+  getFormOptions(): Promise<FormOptions>;
+  getAttachment(transactionId: string): Promise<TransactionAttachment | null>;
+  addTransaction(t: NewTransaction, evidence: Evidence | null): Promise<void>;
   addCategory(name: string): Promise<void>;
 }
 
@@ -20,7 +30,13 @@ export function summarizeByCategory(data: FinanceData): CategorySummary[] {
   });
 }
 
-export async function addTransaction(repo: FinanceRepository, t: NewTransaction): Promise<void> {
+export async function addTransaction(
+  repo: FinanceRepository,
+  t: NewTransaction,
+  evidence: Evidence | null,
+): Promise<void> {
+  const isExpense = t.type === "expense";
+
   if (t.type !== "income" && t.type !== "expense") {
     throw new Error("Jenis transaksi tidak valid.");
   }
@@ -30,10 +46,26 @@ export async function addTransaction(repo: FinanceRepository, t: NewTransaction)
   if (!t.categoryId) {
     throw new Error("Kategori wajib dipilih.");
   }
+  if (!t.methodId) {
+    throw new Error(isExpense ? "Sumber dana wajib dipilih." : "Metode pembayaran wajib dipilih.");
+  }
+  if (isExpense && !t.divisionId) {
+    throw new Error("Divisi wajib dipilih untuk pengeluaran.");
+  }
   if (!/^\d{4}-\d{2}-\d{2}$/.test(t.date)) {
     throw new Error("Tanggal tidak valid.");
   }
-  await repo.addTransaction({ ...t, note: t.note.trim() });
+  if (evidence && !isEvidenceType(evidence.type)) {
+    throw new Error("Bukti harus berupa foto atau PDF.");
+  }
+  if (evidence && evidence.bytes.byteLength > MAX_EVIDENCE_BYTES) {
+    throw new Error("Ukuran bukti maksimal 4 MB.");
+  }
+
+  await repo.addTransaction(
+    { ...t, note: t.note.trim(), divisionId: isExpense ? t.divisionId : null },
+    evidence,
+  );
 }
 
 export async function addCategory(repo: FinanceRepository, name: string): Promise<void> {

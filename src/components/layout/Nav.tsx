@@ -3,8 +3,8 @@
 import { useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import { House, Plus, Tags, Users, Wallet } from "lucide-react";
-import type { Category } from "@/domain/finance";
 import { TransactionSheet } from "@/components/finance/TransactionSheet";
+import type { FormOptions } from "@/domain/finance";
 
 const LEFT_TABS = [
   { href: "/", label: "Home", Icon: House },
@@ -16,7 +16,7 @@ const RIGHT_TABS = [
   { href: "/iuran", label: "Iuran", Icon: Users },
 ];
 
-export function Nav({ categories }: { categories: Category[] }) {
+export function Nav({ options }: { options: FormOptions }) {
   const path = usePathname();
   const router = useRouter();
   const [adding, setAdding] = useState(false);
@@ -40,7 +40,7 @@ export function Nav({ categories }: { categories: Category[] }) {
 
       {adding && (
         <TransactionSheet
-          categories={categories}
+          options={options}
           onClose={() => setAdding(false)}
           onDone={() => setAdding(false)}
         />

@@ -1,19 +1,7 @@
 import type { IuranRepository } from "@/application/iuran";
-import { WEEKLY_FEE, type AttachmentLink, type Evidence } from "@/domain/iuran";
+import { WEEKLY_FEE, type AttachmentLink } from "@/domain/iuran";
 import { db } from "./supabase";
-
-const BUCKET = "bukti";
-const SIGNED_URL_SECONDS = 60 * 60;
-
-const EXTENSIONS: Record<string, string> = {
-  "image/jpeg": "jpg",
-  "image/png": "png",
-  "image/webp": "webp",
-  "application/pdf": "pdf",
-};
-
-const extensionOf = (file: Evidence): string =>
-  EXTENSIONS[file.type] ?? (file.name.split(".").pop() ?? "bin").toLowerCase().replace(/\W/g, "");
+import { BUCKET, SIGNED_URL_SECONDS, extensionOf } from "./storage";
 
 export const iuranRepository: IuranRepository = {
   async getIuran() {

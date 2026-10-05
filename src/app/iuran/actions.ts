@@ -2,19 +2,14 @@
 
 import { revalidatePath } from "next/cache";
 import { recordPayment } from "@/application/iuran";
-import type { Evidence } from "@/domain/iuran";
 import { iuranRepository } from "@/infrastructure/iuranRepository";
+import { evidenceFrom } from "@/shared/evidence";
 
 type Result = { error?: string };
 
 export async function recordPaymentAction(formData: FormData): Promise<Result> {
   try {
-      const file = formData.get("file");
-      const evidence: Evidence | null =
-        file instanceof File && file.size > 0
-          ? { name: file.name, type: file.type, bytes: await file.arrayBuffer() }
-          : null;
-
+      const evidence = await evidenceFrom(formData);
     await recordPayment(
       iuranRepository,
       {

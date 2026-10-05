@@ -6,9 +6,10 @@ import { TransactionRow } from "./TransactionRow";
 interface Props {
   transactions: Transaction[];
   categories: Category[];
+  onSelect(id: string): void;
 }
 
-export function TransactionList({ transactions, categories }: Props) {
+export function TransactionList({ transactions, categories, onSelect }: Props) {
   if (transactions.length === 0) {
     return (
       <EmptyState
@@ -27,7 +28,13 @@ export function TransactionList({ transactions, categories }: Props) {
             {items.map((t) => {
               const category = categoryName(categories, t.categoryId);
               return (
-                <TransactionRow key={t.id} transaction={t} title={t.note || category} meta={category} />
+                <TransactionRow
+                  key={t.id}
+                  transaction={t}
+                  title={t.note || category}
+                  meta={`${t.number} - ${category}`}
+                  onSelect={() => onSelect(t.id)}
+                />
               );
             })}
           </ul>

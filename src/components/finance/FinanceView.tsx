@@ -14,6 +14,7 @@ import { TotalsHero } from "./TotalsHero";
 import { TransactionList } from "./TransactionList";
 import { DatePicker } from "@/components/ui/DatePicker";
 import { Select } from "@/components/ui/Select";
+import { useRouter } from "next/navigation";
 
 type TypeFilter = TransactionFilter["type"];
 
@@ -27,7 +28,7 @@ const INITIAL_FILTER: TransactionFilter = { type: "all", query: "", categoryId: 
 
 export function FinanceView({ data }: { data: FinanceData }) {
   const [filter, setFilter] = useState(INITIAL_FILTER);
-
+  const router = useRouter();
   const update = (patch: Partial<TransactionFilter>) => setFilter((f) => ({ ...f, ...patch }));
   const visible = filterTransactions(data.transactions, filter, data.categories);
 
@@ -63,7 +64,11 @@ export function FinanceView({ data }: { data: FinanceData }) {
           clearable
         />
       </div>
-      <TransactionList transactions={visible} categories={data.categories} />
+      <TransactionList
+        transactions={visible}
+        categories={data.categories}
+        onSelect={(id) => router.push(`/finance/${id}`)}
+      />
     </>
   );
 }

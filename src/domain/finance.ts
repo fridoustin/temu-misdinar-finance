@@ -1,4 +1,6 @@
 export type TransactionType = "income" | "expense";
+import type { PaymentMethod } from "@/domain/iuran";
+
 export const TARGET_DANA = 250_000_000;
 
 export const INCOME_CATEGORIES = [
@@ -28,10 +30,18 @@ export interface Category {
   name: string;
 }
 
+export interface Division {
+  id: string;
+  name: string;
+}
+
 export interface Transaction {
   id: string;
+  number: string; // PPA-M001 atau PPA-K001
   type: TransactionType;
   categoryId: string;
+  methodId: string; // metode pembayaran (pemasukan) atau sumber dana (pengeluaran)
+  divisionId: string | null; // wajib untuk pengeluaran
   amount: number;
   date: string;
   note: string | null;
@@ -40,14 +50,29 @@ export interface Transaction {
 export interface NewTransaction {
   type: TransactionType;
   categoryId: string;
+  methodId: string;
+  divisionId: string | null;
   amount: number;
   date: string;
   note: string;
 }
 
-export interface FinanceData {
-  transactions: Transaction[];
+export interface TransactionAttachment {
+  name: string;
+  url: string;
+}
+
+/** Pilihan untuk form transaksi. */
+export interface FormOptions {
   categories: Category[];
+  divisions: Division[];
+  paymentMethods: PaymentMethod[];
+}
+
+export const EMPTY_OPTIONS: FormOptions = { categories: [], divisions: [], paymentMethods: [] };
+
+export interface FinanceData extends FormOptions {
+  transactions: Transaction[];
 }
 
 export interface Totals {
@@ -63,8 +88,14 @@ export interface TransactionFilter {
   from: string; // kosong = semua tanggal
 }
 
+export const nameById = (
+  list: { id: string; name: string }[],
+  id: string | null,
+  fallback = "-",
+): string => list.find((x) => x.id === id)?.name ?? fallback;
+
 export const categoryName = (categories: Category[], id: string): string =>
-  categories.find((c) => c.id === id)?.name ?? "Tanpa kategori";
+  nameById(categories, id, "Tanpa kategori");
 
 export const totalsOf = (list: Transaction[]): Totals => {
   const sumOf = (type: TransactionType) =>
@@ -84,7 +115,8 @@ export const filterTransactions = (
 
   return list
     .filter((t) => {
-      const text = `${t.note ?? ""} ${categoryName(categories, t.categoryId)}`.toLowerCase();
+      const text =
+        `${t.number} ${t.note ?? ""} ${categoryName(categories, t.categoryId)}`.toLowerCase();
       return (
         (filter.type === "all" || t.type === filter.type) &&
         (!filter.categoryId || t.categoryId === filter.categoryId) &&

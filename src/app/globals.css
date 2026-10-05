@@ -1052,3 +1052,6 @@ input[type="search"],
   cursor: pointer;
 }
 .file-add svg { width: 18px; height: 18px; }
+
+.tx.clickable { cursor: pointer; }
+.prow-value { text-align: right; font-weight: 600; min-width: 0; }

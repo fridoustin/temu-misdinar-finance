@@ -33,7 +33,7 @@ export function HomeView({ summary }: { summary: HomeSummary }) {
             <CategoryCard
               key={s.category.id}
               summary={s}
-              onSelect={() => router.push(`/kategori?c=${s.category.id}`)}
+              onSelect={() => router.push(`/kategori/${s.category.id}`)}
             />
           ))}
         </div>

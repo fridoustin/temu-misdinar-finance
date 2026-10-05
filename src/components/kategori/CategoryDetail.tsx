@@ -1,5 +1,9 @@
+"use client";
+
+import { useRouter } from "next/navigation";
 import { totalsOf, type Category, type Transaction } from "@/domain/finance";
 import { dayShort } from "@/shared/format";
+import { useGoBack } from "@/hooks/useGoBack";
 import { TotalsHero } from "@/components/finance/TotalsHero";
 import { TransactionRow } from "@/components/finance/TransactionRow";
 import { EmptyState } from "@/components/ui/EmptyState";
@@ -8,7 +12,6 @@ import { PageHeader } from "@/components/ui/PageHeader";
 interface Props {
   category: Category;
   transactions: Transaction[];
-  onBack(): void;
 }
 
 const GROUPS = [
@@ -16,14 +19,17 @@ const GROUPS = [
   ["expense", "Pengeluaran"],
 ] as const;
 
-export function CategoryDetail({ category, transactions, onBack }: Props) {
+export function CategoryDetail({ category, transactions }: Props) {
+  const router = useRouter();
+  const goBack = useGoBack("/kategori");
+
   const own = transactions
     .filter((t) => t.categoryId === category.id)
     .sort((a, b) => b.date.localeCompare(a.date));
 
   return (
     <>
-      <PageHeader title={category.name} onBack={onBack} />
+      <PageHeader title={category.name} onBack={goBack} />
       <TotalsHero label="Net" totals={totalsOf(own)} />
       {own.length === 0 && (
         <EmptyState title="Belum ada transaksi" text="Tambahkan transaksi dan pilih kategori ini." />
@@ -40,7 +46,8 @@ export function CategoryDetail({ category, transactions, onBack }: Props) {
                   key={t.id}
                   transaction={t}
                   title={t.note || category.name}
-                  meta={dayShort(t.date)}
+                  meta={`${t.number} - ${dayShort(t.date)}`}
+                  onSelect={() => router.push(`/finance/${t.id}`)}
                 />
               ))}
             </ul>
