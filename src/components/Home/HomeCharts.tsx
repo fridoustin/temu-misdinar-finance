@@ -8,7 +8,7 @@ import {
   monthLabel,
   type MonthSummary,
 } from "@/domain/statistics";
-import { rupiah, rupiahCompact, rupiahSigned } from "@/shared/format";
+import { rupiah, rupiahCompact, rupiahSigned, shortName } from "@/shared/format";
 import { Donut } from "@/components/ui/Donut";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { Select } from "@/components/ui/Select";
@@ -43,7 +43,7 @@ const pressable = (action: () => void) => ({
 export function HomeCharts({ months, finance }: Props) {
   const router = useRouter();
   const [selected, setSelected] = useState(months[0]?.month ?? "");
-  const [panel, setPanel] = useState<Panel | null>(null);
+  const [panel, setPanel] = useState<Panel>("expense");
   const [expenseIdx, setExpenseIdx] = useState<number | null>(null);
   const [flowIdx, setFlowIdx] = useState<number | null>(null);
 
@@ -54,8 +54,8 @@ export function HomeCharts({ months, finance }: Props) {
   const byDivision = expenseByDivision(finance.transactions, finance.divisions, selected);
   const flow = cashflowOf(finance.transactions, selected);
   const flowRows = [
-    { name: "Pemasukan", amount: flow.income, color: "var(--income)" },
-    { name: "Pengeluaran", amount: flow.expense, color: "var(--expense)" },
+    { name: "Pemasukan", short: "Masuk", amount: flow.income, color: "var(--income)" },
+    { name: "Pengeluaran", short: "Keluar", amount: flow.expense, color: "var(--expense)" },
   ];
   const flowTotal = flow.income + flow.expense;
   const label = monthLabel(selected);
@@ -71,15 +71,13 @@ export function HomeCharts({ months, finance }: Props) {
 
   function pickExpense(index: number | null) {
     setExpenseIdx(index);
-    if (index !== null) setPanel("expense");
+    setPanel("expense");
   }
 
   function pickFlow(index: number | null) {
     setFlowIdx(index);
-    if (index !== null) setPanel("cashflow");
+    setPanel("cashflow");
   }
-
-  const toggle = (target: Panel) => setPanel((current) => (current === target ? null : target));
 
   return (
     <>
@@ -91,7 +89,10 @@ export function HomeCharts({ months, finance }: Props) {
       />
 
       <div className="donut-grid">
-        <div className="card donut-card" {...pressable(() => toggle("expense"))}>
+        <div
+          className={"card donut-card" + (panel === "expense" ? " on" : "")}
+          {...pressable(() => setPanel("expense"))}
+        >
           <b>Pengeluaran</b>
           <Donut
             segments={byDivision.map((d, i) => ({ value: d.amount, color: colorAt(i) }))}
@@ -100,7 +101,7 @@ export function HomeCharts({ months, finance }: Props) {
           >
             {activeDivision ? (
               <>
-                <small>{activeDivision.name}</small>
+                <small>{shortName(activeDivision.name)}</small>
                 <b>{rupiahCompact(activeDivision.amount)}</b>
                 <small>{Math.round(activeDivision.share * 100)}%</small>
               </>
@@ -114,7 +115,10 @@ export function HomeCharts({ months, finance }: Props) {
           <small className="muted">Per divisi</small>
         </div>
 
-        <div className="card donut-card" {...pressable(() => toggle("cashflow"))}>
+        <div
+          className={"card donut-card" + (panel === "cashflow" ? " on" : "")}
+          {...pressable(() => setPanel("cashflow"))}
+        >
           <b>Cashflow</b>
           <Donut
             segments={flowRows.map((r) => ({ value: r.amount, color: r.color }))}
@@ -123,7 +127,7 @@ export function HomeCharts({ months, finance }: Props) {
           >
             {activeFlow ? (
               <>
-                <small>{activeFlow.name}</small>
+                <small>{activeFlow.short}</small>
                 <b>{rupiahCompact(activeFlow.amount)}</b>
                 <small>{Math.round((activeFlow.amount / (flowTotal || 1)) * 100)}%</small>
               </>
@@ -138,7 +142,7 @@ export function HomeCharts({ months, finance }: Props) {
         </div>
       </div>
 
-      {panel === "expense" && (
+      {panel === "expense" ? (
         <section className="card detail">
           <div className="detail-head">
             <b>Pengeluaran per divisi</b>
@@ -151,7 +155,7 @@ export function HomeCharts({ months, finance }: Props) {
               {byDivision.map((d, i) => (
                 <li
                   key={d.id || "none"}
-                  className={"rank-row" + (i === expenseIdx ? " on" : "")}
+                  className={i === expenseIdx ? "on" : ""}
                   {...pressable(() => pickExpense(i === expenseIdx ? null : i))}
                 >
                   <span className="swatch" style={{ background: colorAt(i) }} />
@@ -165,9 +169,7 @@ export function HomeCharts({ months, finance }: Props) {
             </ul>
           )}
         </section>
-      )}
-
-      {panel === "cashflow" && (
+      ) : (
         <section className="card detail">
           <div className="detail-head">
             <b>Cashflow</b>
@@ -177,7 +179,7 @@ export function HomeCharts({ months, finance }: Props) {
             {flowRows.map((r, i) => (
               <li
                 key={r.name}
-                className={"rank-row" + (i === flowIdx ? " on" : "")}
+                className={i === flowIdx ? "on" : ""}
                 {...pressable(() => pickFlow(i === flowIdx ? null : i))}
               >
                 <span className="swatch" style={{ background: r.color }} />

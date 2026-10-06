@@ -41,3 +41,17 @@ export const rupiahCompact = (n: number): string => {
   if (abs >= 1e3) return fmt(abs / 1e3, "rb");
   return `${sign}${abs}`;
 };
+
+const SHORT_NAMES: Record<string, string> = {
+  "acara n liturgi": "Acara",
+  perlengkapan: "Perkap",
+  konsumsi: "Konsum",
+};
+
+export const shortName = (name: string): string => {
+  const known = SHORT_NAMES[name.trim().toLowerCase()];
+  if (known) return known;
+
+  const first = name.trim().split(/\s+/)[0] ?? name;
+  return first.length > 9 ? `${first.slice(0, 7)}.` : first;
+};

@@ -25,7 +25,7 @@ export function HomeView({ summary, finance }: Props) {
       <KasKecilCard amount={summary.kasKecil} onOpen={() => router.push("/iuran")} />
       <TargetCard collected={summary.kasBesar.income} target={summary.target} />
       <HomeCharts months={summary.months} finance={finance} />
-      <HomeStats months={summary.months} kasKecilMonths={summary.kasKecilMonths} />
+      <HomeStats kasKecilMonths={summary.kasKecilMonths} />
     </>
   );
 }
