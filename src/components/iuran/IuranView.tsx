@@ -14,6 +14,7 @@ import { MemberList } from "./MemberList";
 import { PaymentSheet } from "./PaymentSheet";
 import { PeriodCard } from "./PeriodCard";
 import { PeriodSelector } from "./PeriodSelector";
+import { MethodTotals } from "./MethodTotals";
 
 type Filter = "all" | "paid" | "unpaid";
 
@@ -59,6 +60,7 @@ export function IuranView({ data }: { data: IuranData }) {
         }
       />
       <IuranSummary total={cur.total} paid={cur.paidCount} collected={totalCollected(data)} />
+      <MethodTotals data={data} />
       <PeriodSelector periods={data.periods} selected={idx} onSelect={setSel} />
       <PeriodCard title={idx === curIdx ? "Iuran Minggu Ini" : `Iuran Minggu ${idx + 1}`} overview={p} />
       <SearchInput value={q} onChange={setQ} placeholder="Cari anggota" />

@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Check, ChevronDown } from "lucide-react";
 import { Picker } from "./Picker";
-import { SearchInput } from "./SearchInput"; // Sesuaikan path jika perlu
+import { SearchInput } from "./SearchInput";
 
 export interface SelectOption {
   value: string;
@@ -14,7 +14,8 @@ interface Props {
   options: SelectOption[];
   onChange(value: string): void;
   placeholder?: string;
-  searchable?: boolean; // Opsional: set true jika ingin fitur search aktif
+  searchable?: boolean; // tampilkan kotak pencarian di dalam daftar
+  compact?: boolean; // pil kecil, untuk ditaruh di baris judul
 }
 
 export function Select({
@@ -24,6 +25,7 @@ export function Select({
   onChange,
   placeholder = "Pilih",
   searchable = true,
+  compact,
 }: Props) {
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState("");
@@ -31,7 +33,7 @@ export function Select({
   const current = options.find((o) => o.value === value);
 
   const filteredOptions = options.filter((o) =>
-    o.label.toLowerCase().includes(query.toLowerCase())
+    o.label.toLowerCase().includes(query.toLowerCase()),
   );
 
   function choose(next: string) {
@@ -41,25 +43,23 @@ export function Select({
 
   function handleClose() {
     setOpen(false);
-    setQuery(""); // Reset keyword pencarian saat dikutup
+    setQuery(""); // reset kata kunci pencarian saat ditutup
   }
 
   return (
     <>
-      <button type="button" className="pick-btn" onClick={() => setOpen(true)}>
+      <button
+        type="button"
+        className={"pick-btn" + (compact ? " sm" : "")}
+        onClick={() => setOpen(true)}
+      >
         <span className={current ? "" : "muted"}>{current?.label ?? placeholder}</span>
         <ChevronDown />
       </button>
 
       {open && (
         <Picker title={title} onClose={handleClose}>
-          {searchable && (
-            <SearchInput
-              value={query}
-              onChange={setQuery}
-              placeholder="Cari..."
-            />
-          )}
+          {searchable && <SearchInput value={query} onChange={setQuery} placeholder="Cari..." />}
           <ul className="opts">
             {filteredOptions.length > 0 ? (
               filteredOptions.map((o) => (

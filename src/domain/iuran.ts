@@ -33,6 +33,12 @@ export interface IuranData {
   paymentMethods: PaymentMethod[];
 }
 
+export interface MethodTotal {
+  method: PaymentMethod;
+  amount: number;
+  count: number;
+}
+
 /** Indeks (0-based) periode pertama anggota: periode pertama yang berakhir pada/setelah join_date. */
 export const joinIndex = (m: Member, periods: Period[]): number => {
   const i = periods.findIndex((p) => p.endDate >= m.joinDate);
@@ -113,3 +119,16 @@ export const MAX_EVIDENCE_BYTES = 4 * 1024 * 1024;
 
 export const isEvidenceType = (type: string): boolean =>
   type.startsWith("image/") || type === "application/pdf";
+
+/** Total iuran per metode pembayaran. `month` kosong berarti semua waktu. Hanya metode yang punya pembayaran. */
+export function totalsByMethod(d: IuranData, month = ""): MethodTotal[] {
+  return d.paymentMethods
+    .map((method) => {
+      const own = d.payments.filter(
+        (p) => p.methodId === method.id && (!month || p.paymentDate.startsWith(month)),
+      );
+      return { method, amount: own.reduce((sum, p) => sum + p.amount, 0), count: own.length };
+    })
+    .filter((row) => row.count > 0)
+    .sort((a, b) => b.amount - a.amount);
+}

@@ -1210,3 +1210,27 @@ input[type="search"],
   padding: 16px;
 }
 .cat-info { display: grid; gap: 2px; }
+
+/* Total per metode */
+.method-card { display: grid; gap: 12px; padding: 14px 16px; }
+.method-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.method-head small { display: block; font-size: 12px; }
+.method-sum { font-size: 20px; color: var(--deep); }
+
+.split { display: flex; gap: 2px; height: 8px; border-radius: 99px; overflow: hidden; }
+.split-seg { display: block; height: 100%; }
+
+.method-grid {
+  list-style: none;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+  gap: 12px;
+}
+.method-grid li { display: grid; gap: 2px; }
+.method-name { display: flex; align-items: center; gap: 6px; font-size: 13px; font-weight: 600; color: var(--mocha); }
+.method-grid b { font-size: 15px; color: var(--deep); }
+.method-grid small { font-size: 12px; }
+
+.pick-btn.sm { width: auto; height: 34px; padding: 0 10px; gap: 6px; border-radius: 10px; font-size: 13px; }
+.pick-btn.sm svg { width: 14px; height: 14px; }
