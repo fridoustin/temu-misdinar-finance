@@ -1155,3 +1155,58 @@ input[type="search"],
 .swatch { width: 12px; height: 12px; border-radius: 50%; flex: none; }
 .rank-name { flex: 1; min-width: 0; font-weight: 600; }
 .rank-name small { display: block; color: var(--muted); font-weight: 400; }
+
+/* Tab geser */
+.tabs {
+  position: relative;
+  display: grid;
+  grid-template-columns: repeat(var(--count), 1fr);
+  padding: 4px;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+}
+.tabs-thumb {
+  position: absolute;
+  top: 4px;
+  bottom: 4px;
+  left: 4px;
+  width: calc((100% - 8px) / var(--count));
+  border-radius: 12px;
+  background: var(--choc);
+  transform: translateX(calc(var(--index) * 100%));
+  transition: transform 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.tabs button {
+  position: relative;
+  z-index: 1;
+  padding: 12px 8px;
+  text-align: center;
+  font-weight: 600;
+  color: var(--mocha);
+  transition: color 1s;
+}
+.tabs button.on { color: #f7f1e7; }
+
+.slide-in-right { animation: slide-in-right 0.8s ease; }
+.slide-in-left { animation: slide-in-left 0.8s ease; }
+@keyframes slide-in-right {
+  from { opacity: 0; transform: translateX(28px); }
+  to { opacity: 1; transform: none; }
+}
+@keyframes slide-in-left {
+  from { opacity: 0; transform: translateX(-28px); }
+  to { opacity: 1; transform: none; }
+}
+#view { overflow-x: clip; }
+
+/* Kartu kategori */
+.cat-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  width: 100%;
+  padding: 16px;
+}
+.cat-info { display: grid; gap: 2px; }

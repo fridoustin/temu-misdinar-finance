@@ -3,9 +3,9 @@ import {
   FinanceData,
   FormOptions,
   NewTransaction,
-  Totals,
   TransactionAttachment,
-  totalsOf,
+  TransactionType,
+  categoriesFor,
 } from "@/domain/finance";
 import { Evidence, MAX_EVIDENCE_BYTES, isEvidenceType } from "@/domain/iuran";
 
@@ -20,15 +20,16 @@ export interface FinanceRepository {
   addCategory(name: string): Promise<void>;
 }
 
-export interface CategorySummary extends Totals {
+export interface CategorySummary {
   category: Category;
   count: number;
+  amount: number;
 }
 
-export function summarizeByCategory(data: FinanceData): CategorySummary[] {
-  return data.categories.map((category) => {
-    const own = data.transactions.filter((t) => t.categoryId === category.id);
-    return { category, count: own.length, ...totalsOf(own) };
+export function summarizeByCategory(data: FinanceData, type: TransactionType): CategorySummary[] {
+  return categoriesFor(type, data.categories).map((category) => {
+    const own = data.transactions.filter((t) => t.categoryId === category.id && t.type === type);
+    return { category, count: own.length, amount: own.reduce((sum, t) => sum + t.amount, 0) };
   });
 }
 

@@ -1,29 +1,21 @@
 import type { CategorySummary } from "@/application/finance";
-import { rupiah, rupiahSigned } from "@/shared/format";
+import type { TransactionType } from "@/domain/finance";
+import { rupiah } from "@/shared/format";
 
 interface Props {
   summary: CategorySummary;
+  type: TransactionType;
   onSelect(): void;
 }
 
-export function CategoryCard({ summary: s, onSelect }: Props) {
+export function CategoryCard({ summary: s, type, onSelect }: Props) {
   return (
-    <button className="card act" onClick={onSelect}>
-      <div className="act-head">
+    <button className="card cat-card" onClick={onSelect}>
+      <div className="cat-info">
         <b>{s.category.name}</b>
-        <small>{s.count} transaksi</small>
+        <small className="muted">{s.count} transaksi</small>
       </div>
-      <div className="trio">
-        <span>
-          Pemasukan<b className="income">{rupiah(s.income)}</b>
-        </span>
-        <span>
-          Pengeluaran<b className="expense">{rupiah(s.expense)}</b>
-        </span>
-        <span>
-          Net<b>{rupiahSigned(s.net)}</b>
-        </span>
-      </div>
+      <b className={type}>{rupiah(s.amount)}</b>
     </button>
   );
 }
