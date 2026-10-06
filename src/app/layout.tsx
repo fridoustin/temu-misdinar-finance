@@ -7,7 +7,13 @@ import { EMPTY_OPTIONS } from "@/domain/finance";
 import { getAdmin } from "@/infrastructure/auth";
 import { financeRepository } from "@/infrastructure/financeRepository";
 
-export const metadata: Metadata = { title: "Temu Misdinar Finance" };
+export const metadata: Metadata = {
+  title: "Temu Misdinar Finance",
+  icons: {
+    icon: "/logo.png",
+    apple: "/logo.png",
+  },
+};
 export const viewport: Viewport = { themeColor: "#F7F1E7", viewportFit: "cover" };
 export const dynamic = "force-dynamic";
 
