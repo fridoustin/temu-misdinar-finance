@@ -1234,3 +1234,91 @@ input[type="search"],
 
 .pick-btn.sm { width: auto; height: 34px; padding: 0 10px; gap: 6px; border-radius: 10px; font-size: 13px; }
 .pick-btn.sm svg { width: 14px; height: 14px; }
+
+/* Halaman login */
+.login-page {
+  min-height: calc(100dvh - 130px);
+  max-width: 380px;
+  margin: 0 auto;
+  display: grid;
+  align-content: center;
+  justify-items: center;
+  gap: 18px;
+}
+.login-brand { text-align: center; }
+.login-logo {
+  width: 56px;
+  height: 56px;
+  margin: 0 auto 12px;
+  border-radius: 18px;
+  display: grid;
+  place-items: center;
+  background: var(--choc);
+  color: #f7f1e7;
+}
+.login-brand h1 { font-size: 24px; font-weight: 700; color: var(--deep); }
+.login-brand p { color: var(--muted); font-size: 14px; }
+.login { width: 100%; display: grid; gap: 14px; padding: 18px; }
+
+.input-icon { position: relative; }
+.input-icon input { padding-right: 52px; }
+.input-icon button {
+  position: absolute;
+  top: 50%;
+  right: 4px;
+  width: 44px;
+  height: 44px;
+  transform: translateY(-50%);
+  display: grid;
+  place-items: center;
+  color: var(--muted);
+}
+
+/* Dialog di tengah layar */
+.dialog-layer { align-items: center; padding: 24px; z-index: 70; }
+.dialog {
+  width: 100%;
+  max-width: 340px;
+  display: grid;
+  justify-items: center;
+  gap: 10px;
+  padding: 24px 20px 20px;
+  text-align: center;
+  background: var(--card);
+  border-radius: 22px;
+  animation: dialog-in 0.2s ease;
+}
+.dialog h2 { color: var(--deep); }
+.dialog p { color: var(--muted); font-size: 14px; }
+.dialog p.err { color: var(--expense); }
+.dialog-actions {
+  width: 100%;
+  margin-top: 8px;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+.dialog-actions:has(> :only-child) { grid-template-columns: 1fr; }
+
+.dialog-icon {
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+}
+.dialog-icon svg { width: 28px; height: 28px; }
+.dialog-icon.success { background: #e6eee5; color: var(--income); }
+.dialog-icon.danger { background: #f3e4e1; color: var(--expense); }
+.dialog-icon.neutral { background: #efe4d3; color: var(--choc); }
+.dialog-icon.success svg { animation: pop 0.4s ease 0.1s both; }
+
+@keyframes dialog-in {
+  from { opacity: 0; transform: scale(0.94); }
+  to { opacity: 1; transform: none; }
+}
+@keyframes pop {
+  0% { opacity: 0; transform: scale(0.4); }
+  70% { transform: scale(1.15); }
+  100% { opacity: 1; transform: scale(1); }
+}

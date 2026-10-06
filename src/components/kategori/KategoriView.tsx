@@ -10,6 +10,7 @@ import { PageHeader } from "@/components/ui/PageHeader";
 import { SlideTabs } from "@/components/ui/SlideTabs";
 import { CategoryCard } from "./CategoryCard";
 import { CategorySheet } from "./CategorySheet";
+import { useIsAdmin } from "../layout/AdminProvider";
 
 const TABS: readonly (readonly [TransactionType, string])[] = [
   ["income", "Pemasukan"],
@@ -18,6 +19,7 @@ const TABS: readonly (readonly [TransactionType, string])[] = [
 
 export function KategoriView({ data }: { data: FinanceData }) {
   const router = useRouter();
+  const isAdmin = useIsAdmin();
   const params = useSearchParams();
 
   const [type, setType] = useState<TransactionType>(
@@ -41,10 +43,12 @@ export function KategoriView({ data }: { data: FinanceData }) {
       <PageHeader
         title="Kategori"
         action={
-          <button className="btn small" onClick={() => setAdding(true)}>
-            <Plus />
-            Kategori
-          </button>
+          isAdmin ? (
+            <button className="btn small" onClick={() => setAdding(true)}>
+              <Plus />
+              Kategori
+            </button>
+          ) : undefined
         }
       />
 

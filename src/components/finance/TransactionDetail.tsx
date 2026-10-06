@@ -13,9 +13,10 @@ import {
 } from "@/domain/finance";
 import { dayLong, rupiah } from "@/shared/format";
 import { useGoBack } from "@/hooks/useGoBack";
-import { ConfirmSheet } from "@/components/ui/ConfirmSheet";
+import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { PageHeader } from "@/components/ui/PageHeader";
 import { TransactionSheet } from "./TransactionSheet";
+import { useIsAdmin } from "../layout/AdminProvider";
 
 interface Props {
   data: FinanceData;
@@ -25,6 +26,7 @@ interface Props {
 
 export function TransactionDetail({ data, transaction: t, attachment }: Props) {
   const router = useRouter();
+  const isAdmin = useIsAdmin();
   const goBack = useGoBack("/finance");
   const [editing, setEditing] = useState(false);
   const [deleting, setDeleting] = useState(false);
@@ -80,16 +82,19 @@ export function TransactionDetail({ data, transaction: t, attachment }: Props) {
         <p className="cap">Tidak ada bukti.</p>
       )}
 
-      <div className="btn-row">
-        <button className="btn outline" onClick={() => setEditing(true)}>
-          <Pencil />
-          Edit
-        </button>
-        <button className="btn danger" onClick={() => setDeleting(true)}>
-          <Trash2 />
-          Hapus
-        </button>
-      </div>
+    {isAdmin && (
+        <div className="btn-row">
+            <button className="btn outline" onClick={() => setEditing(true)}>
+                <Pencil />
+                Edit
+            </button>
+            <button className="btn danger" onClick={() => setDeleting(true)}>
+                <Trash2 />
+                Hapus
+            </button>
+        </div>
+    )}
+      
 
       {editing && (
         <TransactionSheet
@@ -101,10 +106,12 @@ export function TransactionDetail({ data, transaction: t, attachment }: Props) {
         />
       )}
       {deleting && (
-        <ConfirmSheet
+        <ConfirmDialog
+          tone="danger"
+          icon={<Trash2 />}
           title="Hapus transaksi?"
           message={`${t.number} (${rupiah(t.amount)}) akan dihapus permanen beserta buktinya. Nomor ini tidak akan dipakai lagi.`}
-          confirmLabel="Hapus transaksi"
+          confirmLabel="Ya, hapus"
           onConfirm={remove}
           onClose={() => setDeleting(false)}
         />

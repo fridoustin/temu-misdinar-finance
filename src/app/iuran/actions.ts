@@ -4,12 +4,14 @@ import { revalidatePath } from "next/cache";
 import { recordPayment } from "@/application/iuran";
 import { iuranRepository } from "@/infrastructure/iuranRepository";
 import { evidenceFrom } from "@/shared/evidence";
+import { requireAdmin } from "@/infrastructure/auth";
 
 type Result = { error?: string };
 
 export async function recordPaymentAction(formData: FormData): Promise<Result> {
   try {
-      const evidence = await evidenceFrom(formData);
+    await requireAdmin();
+    const evidence = await evidenceFrom(formData);
     await recordPayment(
       iuranRepository,
       {

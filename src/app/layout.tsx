@@ -1,23 +1,24 @@
 import type { Metadata, Viewport } from "next";
 import type { ReactNode } from "react";
 import "./globals.css";
+import { AdminProvider } from "@/components/layout/AdminProvider";
 import { Nav } from "@/components/layout/Nav";
-import { financeRepository } from "@/infrastructure/financeRepository";
 import { EMPTY_OPTIONS } from "@/domain/finance";
+import { getAdmin } from "@/infrastructure/auth";
+import { financeRepository } from "@/infrastructure/financeRepository";
 
-export const metadata: Metadata = {
-  title: "Temu Misdinar Finance",
-  icons: {
-    icon: "/logo.png",
-    apple: "/logo.png",
-  },
-};
+export const metadata: Metadata = { title: "Temu Misdinar Finance" };
 export const viewport: Viewport = { themeColor: "#F7F1E7", viewportFit: "cover" };
 export const dynamic = "force-dynamic";
 
 export default async function RootLayout({ children }: { children: ReactNode }) {
-  // Jika gagal, navigasi tetap tampil dengan pilihan kosong.
-  const options = await financeRepository.getFormOptions().catch(() => EMPTY_OPTIONS);
+  const admin = await getAdmin();
+
+  // Pilihan form hanya dibutuhkan admin, jadi pengunjung tidak perlu memuatnya.
+  const options = admin
+    ? await financeRepository.getFormOptions().catch(() => EMPTY_OPTIONS)
+    : EMPTY_OPTIONS;
+
   return (
     <html lang="id">
       <head>
@@ -28,10 +29,12 @@ export default async function RootLayout({ children }: { children: ReactNode }) 
         />
       </head>
       <body>
-        <div className="app">
-          <main id="view">{children}</main>
-          <Nav options={options} />
-        </div>
+        <AdminProvider isAdmin={Boolean(admin)}>
+          <div className="app">
+            <main id="view">{children}</main>
+            <Nav options={options} />
+          </div>
+        </AdminProvider>
       </body>
     </html>
   );

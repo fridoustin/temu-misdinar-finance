@@ -10,6 +10,7 @@ import {
 import type { NewTransaction, TransactionType } from "@/domain/finance";
 import { financeRepository } from "@/infrastructure/financeRepository";
 import { evidenceFrom } from "@/shared/evidence";
+import { requireAdmin } from "@/infrastructure/auth";
 
 type Result = { error?: string };
 
@@ -28,6 +29,7 @@ const transactionFrom = (form: FormData): NewTransaction => ({
 /** Menjalankan tugas, lalu menyegarkan Finance, Kategori, dan Home. */
 async function run(task: () => Promise<void>): Promise<Result> {
   try {
+    await requireAdmin();
     await task();
   } catch (e) {
     return { error: (e as Error).message };

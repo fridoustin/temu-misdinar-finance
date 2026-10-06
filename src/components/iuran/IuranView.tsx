@@ -15,6 +15,7 @@ import { PaymentSheet } from "./PaymentSheet";
 import { PeriodCard } from "./PeriodCard";
 import { PeriodSelector } from "./PeriodSelector";
 import { MethodTotals } from "./MethodTotals";
+import { useIsAdmin } from "@/components/layout/AdminProvider";
 
 type Filter = "all" | "paid" | "unpaid";
 
@@ -26,11 +27,11 @@ const FILTERS: readonly (readonly [Filter, string])[] = [
 
 export function IuranView({ data }: { data: IuranData }) {
   const router = useRouter();
+  const isAdmin = useIsAdmin();
   const [sel, setSel] = useState<number | null>(null);
   const [filter, setFilter] = useState<Filter>("all");
   const [q, setQ] = useState("");
   const [paying, setPaying] = useState(false);
-
   const curIdx = currentPeriodIndex(data.periods, todayIso());
   const idx = sel ?? curIdx;
 
@@ -53,10 +54,12 @@ export function IuranView({ data }: { data: IuranData }) {
         title="Iuran Misdinar"
         subtitle={`Iuran Mingguan ${rupiah(data.weeklyFee)} / minggu`}
         action={
-          <button className="btn small" onClick={() => setPaying(true)}>
-            <Plus />
-            Catat Pembayaran
-          </button>
+          isAdmin ? (
+            <button className="btn small" onClick={() => setPaying(true)}>
+              <Plus />
+              Catat Pembayaran
+            </button>
+          ) : undefined
         }
       />
       <IuranSummary total={cur.total} paid={cur.paidCount} collected={totalCollected(data)} />

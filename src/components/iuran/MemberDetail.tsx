@@ -8,6 +8,7 @@ import { dayLong, dayShort, rupiah } from "@/shared/format";
 import { PageHeader } from "@/components/ui/PageHeader";
 import { Pill } from "@/components/ui/Pill";
 import { PaymentSheet } from "./PaymentSheet";
+import { useIsAdmin } from "../layout/AdminProvider";
 
 interface Props {
   data: IuranData;
@@ -17,6 +18,7 @@ interface Props {
 
 export function MemberDetail({ data, member: m, attachments }: Props) {
   const router = useRouter();
+  const isAdmin = useIsAdmin();
   const [paying, setPaying] = useState(false);
 
   const paid = data.periods.map((_, i) => isPaid(m, i, data));
@@ -46,10 +48,12 @@ export function MemberDetail({ data, member: m, attachments }: Props) {
         </h1>
       </section>
 
-      <button className="btn" onClick={() => setPaying(true)}>
-        <Plus />
-        Catat Pembayaran
-      </button>
+      {isAdmin && (
+        <button className="btn" onClick={() => setPaying(true)}>
+          <Plus />
+          Catat Pembayaran
+        </button>
+      )}
 
       <h4 className="day">Riwayat</h4>
       <ul className="list card">
