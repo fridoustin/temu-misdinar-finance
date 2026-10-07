@@ -32,7 +32,7 @@ export function LoginForm() {
     try {
       const result = await loginAction(new FormData(e.currentTarget));
       if (result.error) throw new Error(result.error);
-      setWelcome(result.email ?? "");
+      setWelcome(result.username ?? "");
     } catch (x) {
       setError((x as Error).message);
       setBusy(false);
@@ -51,12 +51,13 @@ export function LoginForm() {
 
       <form className="card login" onSubmit={submit}>
         <label className="field">
-          Email
+          Username
           <input
-            name="email"
-            type="email"
-            inputMode="email"
+            name="username"
             autoComplete="username"
+            autoCapitalize="none"
+            autoCorrect="off"
+            spellCheck={false}
             autoFocus
             required
             onChange={() => setError("")}

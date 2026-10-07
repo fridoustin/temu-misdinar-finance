@@ -1,17 +1,20 @@
 "use server";
 
-import { createAuthClient } from "@/infrastructure/auth";
+import { createAuthClient, usernameToEmail } from "@/infrastructure/auth";
 
-export async function loginAction(form: FormData): Promise<{ error?: string; email?: string }> {
-  const email = String(form.get("email") ?? "").trim();
+export async function loginAction(form: FormData): Promise<{ error?: string; username?: string }> {
+  const username = String(form.get("username") ?? "").trim().toLowerCase();
   const password = String(form.get("password") ?? "");
-  if (!email || !password) return { error: "Email dan password wajib diisi." };
+  if (!username || !password) return { error: "Username dan password wajib diisi." };
 
   const supabase = await createAuthClient();
-  const { data, error } = await supabase.auth.signInWithPassword({ email, password });
-  if (error) return { error: "Email atau password salah." };
+  const { error } = await supabase.auth.signInWithPassword({
+    email: usernameToEmail(username),
+    password,
+  });
+  if (error) return { error: "Username atau password salah." };
 
-  return { email: data.user.email ?? email };
+  return { username };
 }
 
 export async function logoutAction(): Promise<void> {

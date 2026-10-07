@@ -1,6 +1,10 @@
 import { createServerClient } from "@supabase/ssr";
 import { cookies } from "next/headers";
 
+const AUTH_DOMAIN = "temu-misdinar.id";
+
+export const usernameToEmail = (username: string): string => `${username}@${AUTH_DOMAIN}`;
+
 export async function createAuthClient() {
   const store = await cookies();
 
